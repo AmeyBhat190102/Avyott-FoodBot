@@ -57,7 +57,9 @@ You are an assistant for a chat-based food ordering system. Your job is to extra
    - Include items explicitly mentioned in the menu under the `items_in_menu` key.
    - Any item mentioned that is not in the menu must go under the `items_not_in_menu` key with its quantity.
    - Default the quantity to 1 if the user does not specify it.
+   - Also there can be instances when there can be any spelling mistakes in the order given by the user
    - For plural forms of menu items (e.g., "sandwiches" instead of "sandwich"), match the singular version in the menu.
+   - Also there can be instances where user can give a item of a particular brand, for such cases you must add the item in any of the category that most suites the item said by the user
 
 4. Quantities:
    - If the user specifies vague terms like "a" or "an," map it to `quantity: 1`.
@@ -114,11 +116,11 @@ def calculate_invoice(order_details):
         quantity = item["quantity"]
         if name in MENU:
             price = MENU[name]
-            cost = quantity * price
+            cost = round(quantity * price,2)
             invoice.append({"name": name, "quantity": quantity, "price_per_item": price, "total": cost})
             total_cost += cost
 
-    return {"invoice": invoice, "total_cost": round(total_cost, 2)}
+    return {"invoice": invoice, "total_cost": round(total_cost, 2)}, order_details["items_not_in_menu"]
 
 # Main function
 def main():
@@ -137,11 +139,15 @@ def main():
 
     order_details = get_order_details(user_input)
     if order_details["items_in_menu"]:
-        invoice = calculate_invoice(order_details)
+        invoice, items_not_in_menu = calculate_invoice(order_details)
         print("Invoice Details:")
         for item in invoice["invoice"]:
             print(f"{item['quantity']}x {item['name']} @ ${item['price_per_item']}: ${item['total']}")
         print(f"Total Cost: ${invoice['total_cost']}")
+
+        print()
+        for item in items_not_in_menu:
+            print(f"{item['name']} is not present in the menu")
     else:
         print("No valid items ordered from the menu.")
 
